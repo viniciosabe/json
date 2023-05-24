@@ -255,16 +255,16 @@ if __name__ == '__main__':
     parcelamento = arcpy.da.SearchCursor("AREA ANALISADA", (parcelamen,)).next()[0]  
     tipo, rua, nr = arcpy.da.SearchCursor("AREA ANALISADA", (tipolog, ruaimo, nrporta)).next()
 
-    arcpy.management.AddField("AREA ANALISADA", "requere", "TEXT")
-    arcpy.management.AddField("AREA ANALISADA", "proces", "TEXT")
+    arcpy.management.AddField("AREA ANALISADA", "requerente", "TEXT")
+    arcpy.management.AddField("AREA ANALISADA", "processo", "TEXT")
     arcpy.management.AddField("AREA ANALISADA", "data", "TEXT")
  
-    arcpy.AddMessage("* * *  Colunas criadas na tabela     * * *") 
-    with arcpy.da.UpdateCursor("AREA ANALISADA", "requere") as cursor:
+    arcpy.AddMessage("* * *  CRIADO AS COLUNAS NA TABELA DA AREA ANALISADA     * * *") 
+    with arcpy.da.UpdateCursor("AREA ANALISADA", "requerente") as cursor:
         for row in cursor:
             row[0] = requerente
             cursor.updateRow(row)
-    with arcpy.da.UpdateCursor("AREA ANALISADA", "proces") as cursor:
+    with arcpy.da.UpdateCursor("AREA ANALISADA", "processo") as cursor:
         for row in cursor:
             row[0] = processo
             cursor.updateRow(row)
@@ -273,7 +273,7 @@ if __name__ == '__main__':
             row[0] = datadia
             cursor.updateRow(row)
 
-    arcpy.AddMessage("* * *  add info na tabela     * * *") 
+    arcpy.AddMessage("* * *  ADD INFO NA TABELA DA AREA ANALISADA     * * *") 
         
     arcpy.AddMessage("* {} {} {} *".format(tipo, rua, nr.lstrip("0")))
     if type(bairro) == unicode:
@@ -311,10 +311,20 @@ if __name__ == '__main__':
             TextElement.text = TextElement.text.replace("NNNNN", str(int(round(total_area/1000000*densid))))
         elif "Proc" in TextElement.text:
             TextElement.text = TextElement.text.replace("NNNNN", processo).replace("RRRRR", requerente.upper()).replace("LLLLL", local).replace("BBBBB", bairro.upper()).replace("PPPPP", parcelamento.title())
-        
+    
+    arcpy.AddMessage("* * *  EXCLUINDO AS COLUNAS DESNECESSÁRIAS     * * *") 
+    campos=[campo.name for campo in arcpy.ListFields("AREA ANALISADA")]
+    manter=["OBJECTID_1","inscant","requerente", "processo","Shape","Shape_Length","Shape_Area" ]
+    colunas_n=len(campos)
+    for i, campo in enumerate(campos):
+            if campo not in manter:
+                arcpy.management.DeleteField("AREA ANALISADA", campo)
+            arcpy.AddMessage("EXCLUINDO AS COLUNAS - PROCESSO: {} DE {}".format(i+1, colunas_n)) 
+    arcpy.AddMessage("* * *  EXCLUINDO AS COLUNAS CONCLUIDO!   * * *") 
+
     arcpy.RefreshTOC()
     arcpy.RefreshActiveView() 
-          
+
     NewProj = requerente.upper()+ ".mxd"
     mxd.saveACopy(os.path.join(pasta, NewProj))
     newmxd = os.path.join(pasta, NewProj)
